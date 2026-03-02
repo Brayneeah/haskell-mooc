@@ -15,7 +15,6 @@
 
 module Set1 where
 
-import           Data.Bool (otherwise)
 
 ------------------------------------------------------------------------------
 -- Ex 1: define variables one and two. They should have type Int and
