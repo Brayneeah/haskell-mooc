@@ -5,13 +5,12 @@
 
 module Set3a where
 
-import Mooc.Todo
 
 -- Some imports you'll need.
 -- Do not add any other imports! :)
-import Data.Char
-import Data.Either
-import Data.List
+import           Data.Char
+import           Data.Either
+import           Data.List
 
 ------------------------------------------------------------------------------
 -- Ex 1: implement the function maxBy that takes as argument a
@@ -28,7 +27,9 @@ import Data.List
 --  maxBy head   [1,2,3] [4,5]  ==>  [4,5]
 
 maxBy :: (a -> Int) -> a -> a -> a
-maxBy measure a b = todo
+maxBy measure a b = if a' > b' then a else b
+    where a' = measure a
+          b' = measure b
 
 ------------------------------------------------------------------------------
 -- Ex 2: implement the function mapMaybe that takes a function and a
@@ -40,7 +41,8 @@ maxBy measure a b = todo
 --   mapMaybe length (Just "abc") ==> Just 3
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f x = todo
+mapMaybe _ Nothing  = Nothing
+mapMaybe f (Just x) = Just $ f x
 
 ------------------------------------------------------------------------------
 -- Ex 3: implement the function mapMaybe2 that works like mapMaybe
@@ -54,7 +56,9 @@ mapMaybe f x = todo
 --   mapMaybe2 div (Just 6) Nothing   ==>  Nothing
 
 mapMaybe2 :: (a -> b -> c) -> Maybe a -> Maybe b -> Maybe c
-mapMaybe2 f x y = todo
+mapMaybe2 _ Nothing _         = Nothing
+mapMaybe2 _ _ Nothing         = Nothing
+mapMaybe2 f (Just a) (Just b) = Just $ f a b
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the functions firstHalf and palindrome so that
@@ -76,9 +80,12 @@ mapMaybe2 f x y = todo
 palindromeHalfs :: [String] -> [String]
 palindromeHalfs xs = map firstHalf (filter palindrome xs)
 
-firstHalf = todo
+firstHalf :: String -> String
+firstHalf s = take half s
+    where half = length s `div` 2 + length s `mod` 2
 
-palindrome = todo
+palindrome :: String -> Bool
+palindrome s = s == reverse s
 
 ------------------------------------------------------------------------------
 -- Ex 5: Implement a function capitalize that takes in a string and
@@ -96,7 +103,7 @@ palindrome = todo
 --   capitalize "goodbye cruel world" ==> "Goodbye Cruel World"
 
 capitalize :: String -> String
-capitalize = todo
+capitalize = unwords . map (\(x:xs) -> toUpper x : xs) . words
 
 ------------------------------------------------------------------------------
 -- Ex 6: powers k max should return all the powers of k that are less
@@ -112,8 +119,11 @@ capitalize = todo
 --   * k^max > max
 --   * the function takeWhile
 
-powers :: Int -> Int -> [Int]
-powers k max = todo
+powers :: Integer -> Integer -> [Integer]
+powers k max = unfoldr powers' 0
+    where powers' n
+            | k ^ n > max = Nothing
+            | otherwise = Just (k^n, n + 1)
 
 ------------------------------------------------------------------------------
 -- Ex 7: implement a functional while loop. While should be a function
@@ -136,7 +146,9 @@ powers k max = todo
 --     ==> Avvt
 
 while :: (a->Bool) -> (a->a) -> a -> a
-while check update value = todo
+while check update value
+    | not $ check value = value
+    | otherwise = while check update $ update value
 
 ------------------------------------------------------------------------------
 -- Ex 8: another version of a while loop. This time, the check
@@ -156,7 +168,9 @@ while check update value = todo
 -- Hint! Remember the case-of expression from lecture 2.
 
 whileRight :: (a -> Either b a) -> a -> b
-whileRight check x = todo
+whileRight check x = whileRight' $ check x
+    where whileRight' (Left x)  = x
+          whileRight' (Right x) = whileRight' $ check x
 
 -- for the whileRight examples:
 -- step k x doubles x if it's less than k
@@ -180,7 +194,7 @@ bomb x = Right (x-1)
 -- Hint! This is a great use for list comprehensions
 
 joinToLength :: Int -> [String] -> [String]
-joinToLength = todo
+joinToLength n str = [s1 ++ s2 | s1 <- str, s2 <- str, (length s1 + length s2) == n]
 
 ------------------------------------------------------------------------------
 -- Ex 10: implement the operator +|+ that returns a list with the first
@@ -193,7 +207,11 @@ joinToLength = todo
 --   [1,2,3] +|+ [4,5,6]  ==> [1,4]
 --   [] +|+ [True]        ==> [True]
 --   [] +|+ []            ==> []
-
+(+|+) :: [a] -> [a] -> [a]
+[] +|+ []         = []
+(x:_) +|+ []      = [x]
+[] +|+ (y:_)      = [y]
+(x:xs) +|+ (y:ys) = [x,y]
 
 ------------------------------------------------------------------------------
 -- Ex 11: remember the lectureParticipants example from Lecture 2? We
@@ -210,7 +228,7 @@ joinToLength = todo
 --   sumRights [Left "bad!", Left "missing"]         ==>  0
 
 sumRights :: [Either a Int] -> Int
-sumRights = todo
+sumRights = sum . map (either (const 0) id)
 
 ------------------------------------------------------------------------------
 -- Ex 12: recall the binary function composition operation
@@ -226,7 +244,9 @@ sumRights = todo
 --   multiCompose [(3*), (2^), (+1)] 0 ==> 6
 --   multiCompose [(+1), (2^), (3*)] 0 ==> 2
 
-multiCompose fs = todo
+multiCompose :: [a -> a] -> a -> a
+multiCompose [] x = x
+multiCompose fs x = foldl1 (.) fs x
 
 ------------------------------------------------------------------------------
 -- Ex 13: let's consider another way to compose multiple functions. Given
@@ -247,7 +267,7 @@ multiCompose fs = todo
 --   multiApp id [head, (!!2), last] "axbxc" ==> ['a','b','c'] i.e. "abc"
 --   multiApp sum [head, (!!2), last] [1,9,2,9,3] ==> 6
 
-multiApp = todo
+multiApp f gs x = f $ map ($ x) gs
 
 ------------------------------------------------------------------------------
 -- Ex 14: in this exercise you get to implement an interpreter for a
@@ -281,5 +301,17 @@ multiApp = todo
 -- using (:). If you build the list in an argument to a helper
 -- function, the surprise won't work. See section 3.8 in the material.
 
+type InterpreterState = (Integer, Integer, [String])
+
 interpreter :: [String] -> [String]
-interpreter commands = todo
+interpreter commands = result
+    where
+        interpreter' :: InterpreterState -> String -> InterpreterState
+        interpreter' (x,y, outs) s = case s of
+            "up"     -> (x, y + 1, outs)
+            "down"   -> (x, y - 1, outs)
+            "left"   -> (x - 1, y, outs)
+            "right"  -> (x + 1, y, outs)
+            "printX" -> (x, y, outs ++ [show x])
+            "printY" -> (x, y, outs ++ [show y])
+        (_, _, result) = foldl interpreter' (0,0, []) commands
