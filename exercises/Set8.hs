@@ -1,7 +1,7 @@
 {- HLINT ignore "Use newtype instead of data" -}
 module Set8 where
 
-import           Data.Char         (intToDigit)
+import           Data.Char     (intToDigit)
 
 -- This is the final project for Introduction to Functional
 -- Programming, part 1. We'll be developing a sort of functional image
@@ -12,12 +12,6 @@ import           Data.Char         (intToDigit)
 -- We'll use the JuicyPixels library to generate images. The library
 -- exposes the Codec.Picture module that has everything we need.
 import           Codec.Picture
-
-import           Control.Exception (Exception, throw)
-
-data TODO = TODO deriving Show
-instance Exception TODO
-todo = throw TODO
 
 -- Let's start by defining Colors and Pictures.
 
