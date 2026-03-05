@@ -268,7 +268,7 @@ rectangle x0 y0 w h = Shape f
 
 union :: Shape -> Shape -> Shape
 union (Shape p1) (Shape p2) = Shape f
-    where f coord = p1 coord && p2 coord
+    where f coord = p1 coord || p2 coord
 
 cut :: Shape -> Shape -> Shape
 cut (Shape p1) (Shape p2) = Shape f
@@ -347,7 +347,9 @@ stripes a b = Picture f
 --       ["000000","000000","000000","000000","000000"]]
 
 paint :: Picture -> Shape -> Picture -> Picture
-paint pat shape base = todo
+paint (Picture pat) (Shape inShape) (Picture base) = Picture f
+    where f c | inShape c = pat c
+              | otherwise = base c
 ------------------------------------------------------------------------------
 
 -- Here's a patterned version of the snowman example. See it by running:
@@ -427,7 +429,7 @@ instance Transform Flip where
         where f (Coord x y) = case flip of
                                 FlipX  -> p (Coord (-x) y)
                                 FlipY  -> p (Coord x (-y))
-                                FlipXY -> p (Coord (-x) (-y))
+                                FlipXY -> p (Coord y x)
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -443,7 +445,7 @@ data Chain a b = Chain a b
     deriving Show
 
 instance (Transform a, Transform b) => Transform (Chain a b) where
-    apply (Chain a b) = apply b . apply a
+    apply (Chain a b) = apply a . apply b
 ------------------------------------------------------------------------------
 
 -- Now we can redefine largeVerticalStripes using the above Transforms.
@@ -482,12 +484,10 @@ data Blur = Blur
 
 instance Transform Blur where
     apply Blur (Picture p) = Picture f
-        where f (Coord x y) = let neighbours = map (p . uncurry Coord) $ map (,) (neighbours' x) <*> neighbours' y
-                                  neighbours' :: Int -> [Int]
-                                  neighbours' n = map (+ n) [1,0,-1]
+        where f (Coord x y) = let neighbours = map (p . uncurry Coord) [(x , y), (x + 1, y), (x - 1, y), (x , y + 1), (x , y - 1)]
                                   mapColor :: (Int -> Int) -> Color -> Color
                                   mapColor f' (Color r g b) = Color (f' r) (f' g) (f' b)
-                              in  mapColor (`div` length neighbours) $ foldl1 (\(Color r1 g1 b1) (Color r2 g2 b2) -> Color (r1 + r2) (g1 + g2) (b1 + b2)) neighbours
+                              in  mapColor (`div` 5) $ foldl1 (\(Color r1 g1 b1) (Color r2 g2 b2) -> Color (r1 + r2) (g1 + g2) (b1 + b2)) neighbours
 ------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------------
@@ -505,7 +505,8 @@ data BlurMany = BlurMany Int
     deriving Show
 
 instance Transform BlurMany where
-    apply = todo
+    apply (BlurMany 1) = apply Blur
+    apply (BlurMany n) = apply $ Chain Blur (BlurMany (n - 1))
 ------------------------------------------------------------------------------
 
 -- Here's a blurred version of our original snowman. See it by running
