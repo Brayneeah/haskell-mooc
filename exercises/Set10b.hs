@@ -11,6 +11,16 @@ module Set10b where
 import Mooc.VeryLimitedPrelude
 import Mooc.Todo
 
+-- import Prelude(Int,Integer,Bool(..),Num(..),otherwise,undefined,even,odd)
+
+
+
+
+-- Custom Prelude replacements
+flip :: (a -> b -> c) -> (b -> a -> c)
+flip f a b = f b a
+
+
 ------------------------------------------------------------------------------
 -- Ex 1: Define the operator ||| that works like ||, but forces its
 -- _right_ argument instead of the left one.
@@ -22,7 +32,10 @@ import Mooc.Todo
 --   False ||| undefined ==> an error!
 
 (|||) :: Bool -> Bool -> Bool
-x ||| y = todo
+_ ||| True = True
+True ||| _ = True
+_ ||| x = x
+
 
 ------------------------------------------------------------------------------
 -- Ex 2: Define the function boolLength, that returns the length of a
@@ -36,7 +49,10 @@ x ||| y = todo
 --   length [False,undefined] ==> 2
 
 boolLength :: [Bool] -> Int
-boolLength xs = todo
+boolLength [] = 0
+boolLength (True:xs) = 1 + boolLength xs
+boolLength (False:xs) = 1 + boolLength xs
+
 
 ------------------------------------------------------------------------------
 -- Ex 3: Define the function validate which, given a predicate and a
@@ -50,7 +66,9 @@ boolLength xs = todo
 --   validate (\x -> undefined) 3  ==>  an error!
 
 validate :: (a -> Bool) -> a -> a
-validate predicate value = todo
+validate p value
+    | p value = value
+    | otherwise = value
 
 ------------------------------------------------------------------------------
 -- Ex 4: Even though we can't implement the generic seq function
@@ -81,13 +99,19 @@ validate predicate value = todo
 --     ==> *** Exception: Prelude.undefined
 
 class MySeq a where
-  myseq :: a -> b -> b
+    myseq :: a -> b -> b
 
 instance MySeq Bool where
-  myseq = todo
+    myseq x y
+        | x = y
+        | otherwise = y
 
 instance MySeq Int where
-  myseq = todo
+    myseq 0 y = y
+    myseq x y = y
 
 instance MySeq [a] where
-  myseq = todo
+    myseq (x:xs) y = y
+    myseq [] y = y
+    -- myseq _ [y] = [y]
+    -- myseq _ ys = ys
