@@ -14,11 +14,6 @@ import           Data.Char
 import           Data.List
 import           Data.Ord
 
-import           Control.Exception (Exception, throw)
-
-data TODO = TODO deriving Show
-instance Exception TODO
-todo = throw TODO
 
 ------------------------------------------------------------------------------
 -- Ex 1: Implement a function workload that takes in the number of
@@ -61,7 +56,7 @@ echo s@(_:xs) = s ++ ", " ++ echo xs
 -- are valid.
 
 countValid :: [String] -> Int
-countValid = length . filter (\s -> (s !! 2) == (s !! 5) || (s !! 3) == (s !! 5))
+countValid = length . filter (\s -> (s !! 2) == (s !! 4) || (s !! 3) == (s !! 5))
 
 ------------------------------------------------------------------------------
 -- Ex 4: Find the first element that repeats two or more times _in a
@@ -179,7 +174,12 @@ instance Eq Text where
         | isSpace y = Text s1 == Text ys
         | otherwise = False
     (==) (Text []) (Text []) = True
-    (==) _ _ = False
+    (==) (Text (x:xs)) ys
+        | isSpace x = Text xs == ys
+        | otherwise = False
+    (==) xs (Text (y:ys))
+        | isSpace y = xs == Text ys
+        | otherwise = False
 
 ------------------------------------------------------------------------------
 -- Ex 8: We can represent functions or mappings as lists of pairs.
@@ -257,4 +257,5 @@ multiply :: Permutation -> Permutation -> Permutation
 multiply p q = map (\i -> p !! (q !! i)) (identity (length p))
 
 permute :: Permutation -> [a] -> [a]
-permute = todo
+permute permutations list = map snd sortedZippedList
+    where sortedZippedList = sortBy (\(x,_) (y,_) -> compare x y) $ zip permutations list
