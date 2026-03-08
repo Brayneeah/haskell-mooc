@@ -2,15 +2,15 @@
 
 module Set13a where
 
-import Mooc.Todo
+import           Mooc.Todo
 
-import Control.Monad
-import Control.Monad.Trans.State
-import Data.Char
-import Data.List
-import qualified Data.Map as Map
+import           Control.Monad
+import           Control.Monad.Trans.State
+import           Data.Char
+import           Data.List
+import qualified Data.Map                  as Map
 
-import Examples.Bank
+import           Examples.Bank
 
 
 ------------------------------------------------------------------------------
@@ -35,11 +35,11 @@ Just x  ?> f = f x       -- In case of success, run the next computation
 -- DO NOT touch this definition!
 readNames :: String -> Maybe (String,String)
 readNames s =
-  split s
-  ?>
-  checkNumber
-  ?>
-  checkCapitals
+    split s
+    ?>
+    checkNumber
+    ?>
+    checkCapitals
 
 -- split should split a string into two words. If the input doesn't
 -- contain a space, Nothing should be returned
@@ -47,19 +47,29 @@ readNames s =
 -- (NB! There are obviously other corner cases like the inputs " " and
 -- "a b c", but you don't need to worry about those here)
 split :: String -> Maybe (String,String)
-split = todo
+split s
+    | null right' = Nothing
+    | otherwise = Just (left, right')
+    where (left,right) = break (== ' ') s
+          right' = drop 1 right
+
 
 -- checkNumber should take a pair of two strings and return them
 -- unchanged if they don't contain numbers. Otherwise Nothing is
 -- returned.
 checkNumber :: (String, String) -> Maybe (String, String)
-checkNumber = todo
+checkNumber s@(s1, s2)
+    | any isDigit s1 || any isDigit s2 = Nothing
+    | otherwise = Just s
 
 -- checkCapitals should take a pair of two strings and return them
 -- unchanged if both start with a capital letter. Otherwise Nothing is
 -- returned.
 checkCapitals :: (String, String) -> Maybe (String, String)
-checkCapitals (for,sur) = todo
+checkCapitals (for@(f:_),sur@(s:_))
+    | isUpper f && isUpper s = Just (for, sur)
+    | otherwise = Nothing
+checkCapitals _ = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given a list of players and their scores (as [(String,Int)]),
@@ -86,7 +96,8 @@ checkCapitals (for,sur) = todo
 --     ==> Just "a"
 
 winner :: [(String,Int)] -> String -> String -> Maybe String
-winner scores player1 player2 = todo
+winner scores player1 player2 = (compare <$> lookup player1 scores <*> lookup player2 scores) ?> (\x -> Just $ if x /= LT then player1 else player2)
+
 
 ------------------------------------------------------------------------------
 -- Ex 3: given a list of indices and a list of values, return the sum
@@ -104,7 +115,10 @@ winner scores player1 player2 = todo
 --    Nothing
 
 selectSum :: Num a => [a] -> [Int] -> Maybe a
-selectSum xs is = todo
+selectSum xs is
+    | all (\x -> x >= 0 && x < len) is = Just $ sum $ (xs !!) <$> is
+    | otherwise = Nothing
+    where len = length xs
 
 ------------------------------------------------------------------------------
 -- Ex 4: Here is the Logger monad from the course material. Implement
@@ -118,27 +132,30 @@ selectSum xs is = todo
 --     ==> Logger ["0","2","4"] 3
 
 data Logger a = Logger [String] a
-  deriving (Show, Eq)
+    deriving (Show, Eq)
 
 msg :: String -> Logger ()
 msg s = Logger [s] ()
 
 instance Functor Logger where
-  fmap f (Logger l a) = Logger l (f a)
+    fmap f (Logger l a) = Logger l (f a)
 
 instance Monad Logger where
-  return x = Logger [] x
-  Logger la a >>= f = Logger (la++lb) b
-    where Logger lb b = f a
+    return x = Logger [] x
+    Logger la a >>= f = Logger (la++lb) b
+        where Logger lb b = f a
 
 -- This is an Applicative instance that works for any monad, you
 -- can just ignore it for now. We'll get back to Applicative later.
 instance Applicative Logger where
-  pure = return
-  (<*>) = ap
+    pure = return
+    (<*>) = ap
 
 countAndLog :: Show a => (a -> Bool) -> [a] -> Logger Int
-countAndLog = todo
+countAndLog _ [] = return 0
+countAndLog f as = Logger strs count
+    where strs = map show $ filter f as
+          count = length strs
 
 ------------------------------------------------------------------------------
 -- Ex 5: You can find the Bank and BankOp code from the course
@@ -155,7 +172,10 @@ exampleBank :: Bank
 exampleBank = (Bank (Map.fromList [("harry",10),("cedric",7),("ginny",1)]))
 
 balance :: String -> BankOp Int
-balance accountName = todo
+balance accountName = BankOp f
+    where
+        f :: Bank -> (Int, Bank)
+        f b@(Bank bank) = (maybe 0 id $ Map.lookup accountName bank, b)
 
 ------------------------------------------------------------------------------
 -- Ex 6: Using the operations balance, withdrawOp and depositOp, and
@@ -217,7 +237,7 @@ paren = todo
 
 parensMatch :: String -> Bool
 parensMatch s = count == 0
-  where (_,count) = runState (mapM_ paren s) 0
+    where (_,count) = runState (mapM_ paren s) 0
 
 ------------------------------------------------------------------------------
 -- Ex 9: using a state of type [(a,Int)] we can keep track of the
