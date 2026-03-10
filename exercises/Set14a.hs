@@ -3,17 +3,17 @@ module Set14a where
 -- Remember to browse the docs of the Data.Text and Data.ByteString
 -- libraries while working on the exercises!
 
-import Mooc.Todo
+import           Mooc.Todo
 
-import Data.Bits
-import Data.Char
-import Data.Text.Encoding
-import Data.Word
-import Data.Int
-import qualified Data.Text as T
-import qualified Data.Text.Lazy as TL
-import qualified Data.ByteString as B
+import           Data.Bits
+import qualified Data.ByteString      as B
 import qualified Data.ByteString.Lazy as BL
+import           Data.Char
+import           Data.Int
+import qualified Data.Text            as T
+import           Data.Text.Encoding
+import qualified Data.Text.Lazy       as TL
+import           Data.Word
 
 ------------------------------------------------------------------------------
 -- Ex 1: Greet a person. Given the name of a person as a Text, return
@@ -28,7 +28,9 @@ import qualified Data.ByteString.Lazy as BL
 --  greetText (T.pack "Benedict Cumberbatch") ==> "Hello, Benedict Cumber...!"
 
 greetText :: T.Text -> T.Text
-greetText = todo
+greetText t
+    | T.length t <= 15 = T.pack "Hello, " <> t <> T.pack "!"
+    | otherwise = T.pack "Hello, " <> T.take 15 t <> T.pack "...!"
 
 ------------------------------------------------------------------------------
 -- Ex 2: Capitalize every second word of a Text.
@@ -40,7 +42,10 @@ greetText = todo
 --     ==> "WORD"
 
 shout :: T.Text -> T.Text
-shout = todo
+shout = T.unwords . f . T.words
+    where f (s1:s2:xs) = T.toUpper s1 : s2 : f xs
+          f [s]        = [T.toUpper s]
+          f []         = []
 
 ------------------------------------------------------------------------------
 -- Ex 3: Find the longest sequence of a single character repeating in
@@ -51,7 +56,14 @@ shout = todo
 --   longestRepeat (T.pack "aabbbbccc") ==> 4
 
 longestRepeat :: T.Text -> Int
-longestRepeat = todo
+longestRepeat = fst' . T.foldl f (0, 0, Nothing)
+    where
+        f :: (Int, Int, Maybe Char) -> Char -> (Int, Int, Maybe Char)
+        f (_, _, Nothing) c = (1, 1, Just c)
+        f (best, n, Just c1) c2
+            | c1 == c2 = (max best (n + 1), n + 1, Just c1)
+            | otherwise = (best, 1, Just c2)
+        fst' (x,_,_) = x
 
 ------------------------------------------------------------------------------
 -- Ex 4: Given a lazy (potentially infinite) Text, extract the first n
@@ -64,7 +76,7 @@ longestRepeat = todo
 --   takeStrict 15 (TL.pack (cycle "asdf"))  ==>  "asdfasdfasdfasd"
 
 takeStrict :: Int64 -> TL.Text -> T.Text
-takeStrict = todo
+takeStrict n = TL.toStrict . TL.take n
 
 ------------------------------------------------------------------------------
 -- Ex 5: Find the difference between the largest and smallest byte
@@ -76,7 +88,9 @@ takeStrict = todo
 --   byteRange (B.pack [3]) ==> 0
 
 byteRange :: B.ByteString -> Word8
-byteRange = todo
+byteRange b
+    | B.null b = 0
+    | otherwise = B.foldl1 max b - B.foldl1 min b
 
 ------------------------------------------------------------------------------
 -- Ex 6: Compute the XOR checksum of a ByteString. The XOR checksum of
@@ -97,7 +111,9 @@ byteRange = todo
 --   xorChecksum (B.pack []) ==> 0
 
 xorChecksum :: B.ByteString -> Word8
-xorChecksum = todo
+xorChecksum b
+    | B.null b = 0
+    | otherwise = B.foldl1 xor b
 
 ------------------------------------------------------------------------------
 -- Ex 7: Given a ByteString, compute how many UTF-8 characters it
@@ -114,7 +130,9 @@ xorChecksum = todo
 --   countUtf8Chars (B.drop 1 (encodeUtf8 (T.pack "åäö"))) ==> Nothing
 
 countUtf8Chars :: B.ByteString -> Maybe Int
-countUtf8Chars = todo
+countUtf8Chars b = case decodeUtf8' b of
+                        Left _  -> Nothing
+                        Right t -> Just $ T.length t
 
 ------------------------------------------------------------------------------
 -- Ex 8: Given a (nonempty) strict ByteString b, generate an infinite
@@ -126,5 +144,6 @@ countUtf8Chars = todo
 --     ==> [0,1,2,2,1,0,0,1,2,2,1,0,0,1,2,2,1,0,0,1]
 
 pingpong :: B.ByteString -> BL.ByteString
-pingpong = todo
+pingpong b = let s = B.unpack b
+             in  BL.pack $ cycle (s <> reverse s)
 
